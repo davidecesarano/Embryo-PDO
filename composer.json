@@ -1,0 +1,26 @@
+{
+    "name": "davidecesarano/embryo-pdo",
+    "type": "library",
+    "description": "Embryo PDO is a PHP SQL query builder using PDO.",
+    "keywords": [
+        "php",
+        "pdo",
+        "query builder"
+    ],
+    "homepage": "https://github.com/davidecesarano/embryo-pdo",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Davide Cesarano",
+            "homepage": "https://github.com/davidecesarano"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Embryo\\": "Embryo/"
+        }
+    }
+}
