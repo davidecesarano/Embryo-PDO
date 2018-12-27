@@ -1,5 +1,15 @@
 <?php 
 
+    /**
+     * Database
+     * 
+     * This class set PDO connection and actives query builder
+     * from table or query.
+     * 
+     * @author Davide Cesarano <davide.cesarano@unipegaso.it>
+     * @link https://github.com/davidecesarano/embryo-pdo
+     */
+    
     namespace Embryo\PDO;
 
     use Embryo\PDO\QueryBuilder\QueryBuilder;

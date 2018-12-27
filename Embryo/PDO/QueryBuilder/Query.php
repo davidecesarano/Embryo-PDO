@@ -1,5 +1,14 @@
 <?php 
 
+    /**
+     * Query
+     * 
+     * This class performs a query.
+     * 
+     * @author Davide Cesarano <davide.cesarano@unipegaso.it>
+     * @link https://github.com/davidecesarano/embryo-pdo
+     */
+
     namespace Embryo\PDO\QueryBuilder;
 
     class Query 
@@ -103,6 +112,18 @@
                 throw new \PDOException($e->getMessage());
 
             }
+        }
+
+        /**
+         * Execute and return TRUE on success 
+         * or FALSE on failure.
+         *
+         * @return bool
+         */
+        public function exec(): bool
+        {
+            $this->execute();
+            return $this->execute;
         }
 
         /**

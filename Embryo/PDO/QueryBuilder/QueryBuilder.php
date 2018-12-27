@@ -1,24 +1,89 @@
 <?php 
 
+    /**
+     * QueryBuilder
+     * 
+     * This query builder provides a convenient, fluent 
+     * interface to creating and running database queries.
+     * 
+     * @author Davide Cesarano <davide.cesarano@unipegaso.it>
+     * @link https://github.com/davidecesarano/embryo-pdo
+     */
+
     namespace Embryo\PDO\QueryBuilder;
     
     use Embryo\PDO\QueryBuilder\Query;
     
     class QueryBuilder
     {
+        /**
+         * @var PDO $pdo
+         */
         private $pdo;
+        
+        /**
+         * @var string $table
+         */
         private $table;
+
+        /**
+         * @var array $insert
+         */
         private $insert = [];
+        
+        /**
+         * @var array $update
+         */
         private $update = [];
+
+        /**
+         * @var string $select
+         */
         private $select = '';
+
+        /**
+         * @var bool $delete
+         */
         private $delete = false;
+        
+        /**
+         * @var string $leftJoin
+         */
         private $leftJoin = '';
+        
+        /**
+         * @var string $rightJoin
+         */
         private $rightJoin = '';
+        
+        /**
+         * @var string $crossJoin
+         */
         private $crossJoin = '';
+
+        /**
+         * @var string $where
+         */
         private $where = '';
+
+        /**
+         * @var array $andWhere
+         */
         private $andWhere = [];
+        
+        /**
+         * @var array $orWhere
+         */
         private $orWhere = [];
+
+        /**
+         * @var string $orderBy
+         */
         private $orderBy = '';
+
+        /**
+         * @var string $limit
+         */
         private $limit = '';
 
         /**
@@ -73,7 +138,7 @@
         }
 
         /**
-         * Select query
+         * Select query.
          *
          * @param string[] $field
          * @return Query
