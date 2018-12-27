@@ -11,16 +11,16 @@ $ composer require davidecesarano/embryo-pdo
 ```
 
 ## Usage
-* Connection
-* Retrieving results
-* Insert
-* Select
-* Update
-* Delete
-* Where clauses
-* Ordering, grouping, limit
-* Simple Joins
-* Raw Query
+* [Connection](#connection)
+* [Retrieving results](#retriving-results)
+* [Insert](#insert)
+* [Select](#select)
+* [Update](#update)
+* [Delete](#delete)
+* [Where clauses](#where-clauses)
+* [Ordering and limit](#ordering-and-limit)
+* [Simple Joins](#simple-joins)
+* [Raw Query](#raw-query)
 
 ### Connection
 Create a multidimensional array with database parameters and pass it at the `Database` object. Later, create connection with `connection` method. 
@@ -73,23 +73,88 @@ This will return the last inserted id.
 ### Select
 You can select row/s with `select` method.
 ```php
-$users = $pdo->table('users')->where('id', 1)->select('name, surname')->get();
+$user = $pdo->table('users')->where('id', 1)->select('name, surname')->get();
+```
+The `get()` method returns a `stdClass` object:
+```php
+echo $user->name.' '.$user->name;
 ```
 
 ### Update
 
-You can select row/s with `select` method.
+You can update row/s with `update` method.
 ```php
 $data = ['name' => 'Name', => 'surname' => 'Surname'];
-$users = $pdo->table('users')->where('id', 1)->update($data)->get();
+$query = $pdo->table('users')->where('id', 1)->update($data)->count();
 ```
+The `count()` method returns the number of updated rows. The update method also accepts the `exec()` method and it will return true on success or false on failure.
 
 ### Delete
+You can delete row/s with `delete` method.
+```php
+$query = $pdo->table('users')->where('id', 1)->delete()->exec();
+```
 
 ### Where clauses
 
-### Ordering, grouping, limit
+You may use the `where` method to add where clauses to the query. The most basic call to where requires three arguments. The first argument is the name of the column. The second argument is an operator, which can be any of the database's supported operators. Finally, the third argument is the value to evaluate against the column.
+```php
+$users = $pdo->table('users')->where('id', '>', 1)->select()->all();
+```
+For convenience, if you want to verify that a column is equal to a given value, you may pass the value directly as the second argument to the where method:
+```php
+$user = $pdo->table('users')->where('id', 1)->select()->get();
+```
 
+You may use `andWhere` and `orWhere` methods for adding clauses to query:
+```php
+// andWhere
+$users = $pdo->table('users')
+    ->where('city', 'Naples')
+    ->andWhere('role', 1)
+    ->select()
+    ->all();
+
+// orWhere
+$users = $pdo->table('users')
+    ->where('city', 'Naples')
+    ->orWhere('city', 'Rome')
+    ->select()
+    ->all();
+```
+
+### Ordering and limit
+The `orderBy` method allows you to sort the result of the query by a given column:
+```php
+$users = $pdo->table('users')->orderBy('id', 'DESC')->select()->all();
+```
+You may use the `limit` method To limit the number of results returned from the query:
+```php
+$users = $pdo->table('users')->limit(0, 10)->select()->all();
+```
 ### Simple Joins
+The query builder may also be used to write simple join statements with `leftJoin`, `rightJoin` or `crossJoin` methods:
+```php
+// left join
+$users = $pdo->table('users')
+    ->leftJoin('roles ON roles.id = users.role_id')
+    ->select('users.*', 'roles.name')
+    ->all();
+```
 
 ### Raw Query
+Sometimes you may need to use a raw expression in a query. To create a raw expression, you may use the `query` method:
+```php
+$users = $pdo->query("
+    SELECT
+        users.*
+        roles.name
+    FROM users
+    LEFT JOIN roles ON roles.id = users.role_id
+    WHERE users.city = :city
+    ORDER BY id DESC
+")->values([
+    'city' => 'Naples'
+])->all();
+```
+The `values` method binds a value to a parameter. Binds a value to a corresponding named placeholder in the SQL statement that was used to prepare the statement.  
