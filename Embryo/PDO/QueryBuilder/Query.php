@@ -152,9 +152,9 @@
          * Execute and return a single
          * object row.
          *
-         * @return object
+         * @return object|bool
          */
-        public function get(): object
+        public function get()
         {
             $this->execute();
             return $this->stmt->fetch(\PDO::FETCH_OBJ);
@@ -164,9 +164,9 @@
          * Execute and return an array
          * of objects.
          *
-         * @return void
+         * @return array|bool
          */
-        public function all(): array
+        public function all()
         {
             $this->execute();
             return $this->stmt->fetchAll(\PDO::FETCH_OBJ);
