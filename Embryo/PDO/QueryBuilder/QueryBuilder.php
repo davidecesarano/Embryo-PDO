@@ -47,19 +47,24 @@
         private $delete = false;
         
         /**
-         * @var string $leftJoin
+         * @var array $leftJoin
          */
-        private $leftJoin = '';
+        private $leftJoin = [];
         
         /**
-         * @var string $rightJoin
+         * @var array $rightJoin
          */
-        private $rightJoin = '';
+        private $rightJoin = [];
         
         /**
-         * @var string $crossJoin
+         * @var array $crossJoin
          */
-        private $crossJoin = '';
+        private $crossJoin = [];
+
+        /**
+         * @var array $innerJoin
+         */
+        private $innerJoin = [];
 
         /**
          * @var string $where
@@ -158,7 +163,7 @@
          */
         public function leftJoin(string $join): self
         {
-            $this->leftJoin = $join;
+            $this->leftJoin[] = $join;
             return $this;
         }
 
@@ -170,7 +175,7 @@
          */
         public function rightJoin(string $join): self 
         {
-            $this->rightJoin = $join;
+            $this->rightJoin[] = $join;
             return $this;
         }
 
@@ -182,7 +187,7 @@
          */
         public function crossJoin(string $join): self 
         {
-            $this->crossJoin = $join;
+            $this->crossJoin[] = $join;
             return $this;
         }
 
@@ -346,42 +351,58 @@
             }
 
             // left join
-            if ($this->leftJoin) {
-                $query .= ' LEFT JOIN '.$this->leftJoin;
+            if (!empty($this->leftJoin)) {
+                foreach ($this->leftJoin as $join) {
+                    $query .= ' LEFT JOIN '.$join;
+                }
             }
 
             // right join
-            if ($this->rightJoin) {
-                $query .= ' RIGHT JOIN '.$this->rightJoin;
+            if (!empty($this->rightJoin)) {
+                foreach ($this->rightJoin as $join) {
+                    $query .= ' RIGHT JOIN '.$join;
+                }
             }
 
             // cross join
-            if ($this->crossJoin) {
-                $query .= ' CROSS JOIN '.$this->crossJoin;
+            if (!empty($this->crossJoin)) {
+                foreach ($this->crossJoin as $join) {
+                    $query .= ' CROSS JOIN '.$join;
+                }
+            }
+
+            // inner join
+            if (!empty($this->innerJoin)) {
+                foreach ($this->innerJoin as $join) {
+                    $query .= ' INNER JOIN '.$join;
+                }
             }
 
             // where
             if (!empty($this->where)) {
-                $whereRaw = $this->where['field'].' '.$this->where['operator'].' :'.$this->where['field'];
+                $field = str_replace('.', '', $this->where['field']);
+                $whereRaw = $this->where['field'].' '.$this->where['operator'].' :'.$field;
                 $query .= ' WHERE '.$whereRaw;
-                $values[$this->where['field']] = $this->where['value'];
+                $values[$field] = $this->where['value'];
             }
 
             // and where
             if (!empty($this->andWhere)) {
                 foreach ($this->andWhere as $andWhere) {
-                    $andWhereRaw = $andWhere['field'].' '.$andWhere['operator'].' :'.$andWhere['field'];
+                    $field = str_replace('.', '', $andWhere['field']);
+                    $andWhereRaw = $andWhere['field'].' '.$andWhere['operator'].' :'.$field;
                     $query .= ' AND '.$andWhereRaw;
-                    $values[$andWhere['field']] = $andWhere['value'];
+                    $values[$field] = $andWhere['value'];
                 }
             }
 
             // or where
             if (!empty($this->orWhere)) {
                 foreach ($this->orWhere as $orWhere) {
-                    $orWhereRaw = $orWhere['field'].' '.$orWhere['operator'].' :'.$orWhere['field'];
+                    $field = str_replace('.', '', $orWhere['field']);
+                    $orWhereRaw = $orWhere['field'].' '.$orWhere['operator'].' :'.$field;
                     $query .= ' OR '.$orWhere;
-                    $values[$orWhere['field']] = $orWhere['value'];
+                    $values[$field] = $orWhere['value'];
                 }
             }
 
