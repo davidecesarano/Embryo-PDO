@@ -201,7 +201,7 @@
          */
         public function where(string $field, $operatorValue, $value = null): self
         {
-            $operators = ['=', '>', '>=', '<', '<='. '!='];
+            $operators = ['=', '>', '>=', '<', '<=', '!='];
             
             if (in_array($operatorValue, $operators)) {
                 
@@ -232,7 +232,7 @@
          */
         public function andWhere($field, $operatorValue, $value = null): self
         {
-            $operators = ['=', '>', '>=', '<', '<='. '!='];
+            $operators = ['=', '>', '>=', '<', '<=', '!='];
             
             if (in_array($operatorValue, $operators)) {
                 
@@ -263,7 +263,7 @@
          */
         public function orWhere($field, $operatorValue, $value = null): self
         {
-            $operators = ['=', '>', '>=', '<', '<='. '!='];
+            $operators = ['=', '>', '>=', '<', '<=', '!='];
             
             if (in_array($operatorValue, $operators)) {
                 
