@@ -100,17 +100,11 @@
         public function execute()
         {
             try {
-
-                $this->pdo->beginTransaction(); 
                 $this->execute = $this->stmt->execute();
                 $this->lastInsertId = $this->pdo->lastInsertId();
-                $this->pdo->commit(); 
 
             } catch (\PDOException $e) {
-                
-                $this->pdo->rollback(); 
                 throw new \PDOException($e->getMessage());
-
             }
         }
 
