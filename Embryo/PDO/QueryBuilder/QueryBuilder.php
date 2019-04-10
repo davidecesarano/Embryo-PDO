@@ -67,6 +67,11 @@
         private $innerJoin = [];
 
         /**
+         * @var array $rawJoin
+         */
+        private $rawJoin = [];
+
+        /**
          * @var string $where
          */
         private $where = '';
@@ -90,6 +95,11 @@
          * @var string $limit
          */
         private $limit = '';
+
+        /**
+         * @var string $groupBy
+         */
+        private $groupBy = '';
 
         /**
          * Set PDO connection and table.
@@ -192,6 +202,30 @@
         }
 
         /**
+         * Inner join query.
+         *
+         * @param string $join
+         * @return self
+         */
+        public function innerJoin(string $join): self 
+        {
+            $this->innerJoin[] = $join;
+            return $this;
+        }
+
+        /**
+         * Raw join query.
+         *
+         * @param string $join
+         * @return self
+         */
+        public function rawJoin(string $join): self 
+        {
+            $this->rawJoin[] = $join;
+            return $this;
+        }
+
+        /**
          * Where clauses.
          *
          * @param string $field
@@ -285,28 +319,38 @@
         }
 
         /**
-         * Order by query.
+         * Group by query.
          *
-         * @param string $field
-         * @param string $flag
+         * @param string $groupBy
          * @return self
          */
-        public function orderBy(string $field, string $flag = 'ASC'): self
+        public function groupBy(string $groupBy): self 
         {
-            $this->orderBy = $field.' '.$flag;
+            $this->groupBy = $groupBy;
+            return $this;
+        }
+
+        /**
+         * Order by query.
+         *
+         * @param string $order
+         * @return self
+         */
+        public function orderBy(string $order): self
+        {
+            $this->orderBy = $order;
             return $this;
         }
 
         /**
          * Limit query.
          *
-         * @param int $start
-         * @param int|null $end
+         * @param string $limit
          * @return self
          */
-        public function limit(int $start, int $end = null): self
+        public function limit(string $limit): self
         {
-            $this->limit = rtrim($start.','.$end, ',');
+            $this->limit = $limit;
             return $this;
         }
 
@@ -378,6 +422,13 @@
                 }
             }
 
+            // raw join 
+            if (!empty($this->rawJoin)) {
+                foreach ($this->rawJoin as $join) {
+                    $query .= ' '.$join;
+                }
+            }
+
             // where
             if (!empty($this->where)) {
                 $field = str_replace('.', '', $this->where['field']);
@@ -401,9 +452,14 @@
                 foreach ($this->orWhere as $orWhere) {
                     $field = str_replace('.', '', $orWhere['field']);
                     $orWhereRaw = $orWhere['field'].' '.$orWhere['operator'].' :'.$field;
-                    $query .= ' OR '.$orWhere;
+                    $query .= ' OR '.$orWhereRaw;
                     $values[$field] = $orWhere['value'];
                 }
+            }
+
+            // group by
+            if ($this->groupBy) {
+                $query .= ' GROUP BY '.$this->groupBy;
             }
 
             // order by
