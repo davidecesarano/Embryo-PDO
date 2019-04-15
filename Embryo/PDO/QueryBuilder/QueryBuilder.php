@@ -87,6 +87,11 @@
         private $orWhere = [];
 
         /**
+         * @var array $rawWhere
+         */
+        private $rawWhere = [];
+
+        /**
          * @var string $orderBy
          */
         private $orderBy = '';
@@ -319,6 +324,22 @@
         }
 
         /**
+         * Raw Where clauses.
+         *
+         * @param string $where
+         * @param array $values
+         * @return self
+         */
+        public function rawWhere(string $where, array $values = []): self
+        {
+            $this->rawWhere = [
+                'query'  => $where,
+                'values' => $values 
+            ];
+            return $this;
+        }
+
+        /**
          * Group by query.
          *
          * @param string $groupBy
@@ -455,6 +476,12 @@
                     $query .= ' OR '.$orWhereRaw;
                     $values[$field] = $orWhere['value'];
                 }
+            }
+
+            // raw where
+            if (!empty($this->rawWhere)) {
+                $query .= $this->rawWhere['query'];
+                $values = array_merge($values, $this->rawWhere['values']);
             }
 
             // group by
