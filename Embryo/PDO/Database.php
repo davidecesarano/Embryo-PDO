@@ -3,8 +3,7 @@
     /**
      * Database
      * 
-     * This class set PDO connection and actives query builder
-     * from table or query.
+     * This class set PDO connection.
      * 
      * @author Davide Cesarano <davide.cesarano@unipegaso.it>
      * @link https://github.com/davidecesarano/embryo-pdo
@@ -12,15 +11,14 @@
     
     namespace Embryo\PDO;
 
-    use Embryo\PDO\QueryBuilder\QueryBuilder;
-    use Embryo\PDO\QueryBuilder\Query;
+    use Embryo\PDO\Connection;
 
     class Database
     {
         /**
-         * @var PDO $pdo
+         * @var array $connections
          */
-        private $pdo;
+        private $connections = [];
 
         /**
          * @var array $database
@@ -40,18 +38,18 @@
         /**
          * Set PDO connection from database array.
          *
-         * @param string $database
-         * @return self
+         * @param string $name
+         * @return Connection
          */
-        public function connection(string $database = 'local'): self
+        public function connection(string $name = 'local'): Connection
         {
-            if (!isset($this->database[$database])) {
+            if (!isset($this->database[$name])) {
                 throw new \InvalidArgumentException("Database $database doesn't exists.");
             }
 
             try {
 
-                $database = $this->database[$database];
+                $database = $this->database[$name];
                 $engine   = $database['engine']; 
                 $host     = $database['host'];
                 $name     = $database['name'];
@@ -61,57 +59,17 @@
                 $options  = $database['options'];
                 $dsn      = $engine.':dbname='.$name.";host=".$host.";charset=".$charset;
                 
-                $this->pdo = new \PDO($dsn, $user, $password, $options);
-                return $this;
+                if (array_key_exists($name, $this->connections)) {
+                    return $this->connections[$name];
+                }
 
+                $pdo = new \PDO($dsn, $user, $password, $options);
+                $connection = new Connection($pdo);
+                $this->connections[$name] = $connection;
+                return $connection;
+                
             } catch (\PDOException $e) {
                 throw new \PDOException($e->getMessage());
-            }
-        }
-
-        /**
-         * Set query builder from table.
-         *
-         * @param string $table
-         * @return QueryBuilder
-         */
-        public function table(string $table): QueryBuilder
-        {
-            return new QueryBuilder($this->pdo, $table);
-        }
-
-        /**
-         * Set query from string
-         *
-         * @param string $query
-         * @return Query
-         */
-        public function query(string $query): Query
-        {
-            return (new Query($this->pdo))->query($query);
-        }
-
-        /**
-         * Transaction
-         * 
-         * @param Closure $callback
-         * @return mixed
-         */
-        public function transaction(\Closure $callback)
-        {
-            $callback = \Closure::bind($callback, $this);
-            try {
-
-                $this->pdo->beginTransaction();
-                $result = $callback();
-                $this->pdo->commit();
-                return $result;
-
-            } catch (\PDOException $e) {
-                
-                $this->pdo->rollback();
-                throw new \PDOException($e->getMessage());
-                
             }
         }
     }
