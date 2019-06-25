@@ -38,18 +38,20 @@
         /**
          * Set PDO connection from database array.
          *
-         * @param string $name
+         * @param string $connectionName
          * @return Connection
+         * @throws InvalidArgumentException
+         * @throws PDOException
          */
-        public function connection(string $name = 'local'): Connection
+        public function connection(string $connectionName = 'local'): Connection
         {
-            if (!isset($this->database[$name])) {
+            if (!isset($this->database[$connectionName])) {
                 throw new \InvalidArgumentException("Database $database doesn't exists.");
             }
 
             try {
 
-                $database = $this->database[$name];
+                $database = $this->database[$connectionName];
                 $engine   = $database['engine']; 
                 $host     = $database['host'];
                 $name     = $database['name'];
@@ -59,13 +61,13 @@
                 $options  = $database['options'];
                 $dsn      = $engine.':dbname='.$name.";host=".$host.";charset=".$charset;
                 
-                if (array_key_exists($name, $this->connections)) {
-                    return $this->connections[$name];
+                if (array_key_exists($connectionName, $this->connections)) {
+                    return $this->connections[$connectionName];
                 }
 
                 $pdo = new \PDO($dsn, $user, $password, $options);
                 $connection = new Connection($pdo);
-                $this->connections[$name] = $connection;
+                $this->connections[$connectionName] = $connection;
                 return $connection;
                 
             } catch (\PDOException $e) {
