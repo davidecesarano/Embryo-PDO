@@ -87,6 +87,36 @@
         private $orWhere = [];
 
         /**
+         * @var string $whereNull
+         */
+        private $whereNull = '';
+        
+        /**
+         * @var array $andWhereNull
+         */
+        private $andWhereNull = [];
+        
+        /**
+         * @var array $orWhereNull
+         */
+        private $orWhereNull = [];
+        
+        /**
+         * @var string $whereNotNull
+         */
+        private $whereNotNull = '';
+        
+        /**
+         * @var array $andWhereNotNull
+         */
+        private $andWhereNotNull = [];
+        
+        /**
+         * @var array $orWhereNotNull
+         */
+        private $orWhereNotNull = [];
+
+        /**
          * @var array $rawWhere
          */
         private $rawWhere = [];
@@ -105,6 +135,11 @@
          * @var string $groupBy
          */
         private $groupBy = '';
+
+        /**
+         * @var array $whereOperators
+         */
+        private $whereOperators = ['=', '>', '>=', '<', '<=', '!='];
 
         /**
          * Set PDO connection and table.
@@ -239,10 +274,8 @@
          * @return self
          */
         public function where(string $field, $operatorValue, $value = null): self
-        {
-            $operators = ['=', '>', '>=', '<', '<=', '!='];
-            
-            if (in_array($operatorValue, $operators)) {
+        {   
+            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
                 
                 $this->where = [
                     'field'    => $field,
@@ -271,9 +304,7 @@
          */
         public function andWhere($field, $operatorValue, $value = null): self
         {
-            $operators = ['=', '>', '>=', '<', '<=', '!='];
-            
-            if (in_array($operatorValue, $operators)) {
+            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
                 
                 $this->andWhere[] = [
                     'field'    => $field,
@@ -302,9 +333,7 @@
          */
         public function orWhere($field, $operatorValue, $value = null): self
         {
-            $operators = ['=', '>', '>=', '<', '<=', '!='];
-            
-            if (in_array($operatorValue, $operators)) {
+            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
                 
                 $this->orWhere[] = [
                     'field'    => $field,
@@ -324,6 +353,78 @@
         }
 
         /**
+         * Where is null clause.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function whereNull(string $field) 
+        {
+            $this->whereNull = $field;
+            return $this;
+        }
+
+        /**
+         * And where is null clauses.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function andWhereNull(string $field) 
+        {
+            $this->andWhereNull[] = $field; 
+            return $this;
+        }
+
+        /**
+         * Or where is null clauses.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function orWhereNull(string $field) 
+        {
+            $this->orWhereNull[] = $field;
+            return $this;
+        }
+
+        /**
+         * Where is not null clause.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function whereNotNull(string $field) 
+        {
+            $this->whereNotNull = $field;
+            return $this;
+        }
+
+        /**
+         * And where is not null clauses.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function andWhereNotNull(string $field) 
+        {
+            $this->andWhereNotNull[] = $field; 
+            return $this;
+        }
+
+        /**
+         * Or where is not null clauses.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function orWhereNotNull(string $field) 
+        {
+            $this->orWhereNotNull[] = $field; 
+            return $this;
+        }
+
+        /**
          * Raw Where clauses.
          *
          * @param string $where
@@ -333,7 +434,7 @@
         public function rawWhere(string $where, array $values = []): self
         {
             $this->rawWhere = [
-                'query'  => $where,
+                'query'  => ' '.$where,
                 'values' => $values 
             ];
             return $this;
@@ -475,6 +576,44 @@
                     $orWhereRaw = $orWhere['field'].' '.$orWhere['operator'].' :'.$field;
                     $query .= ' OR '.$orWhereRaw;
                     $values[$field] = $orWhere['value'];
+                }
+            }
+
+            // where is null
+            if (!empty($this->whereNull)) {
+                $query .= ' WHERE '.$this->whereNull.' IS NULL';
+            }
+
+            // and where is null
+            if (!empty($this->andWhereNull)) {
+                foreach ($this->andWhereNull as $field) {
+                    $query .= ' AND '.$field.' IS NULL';
+                }
+            }
+
+            // or where is null
+            if (!empty($this->orWhereNull)) {
+                foreach ($this->orWhereNull as $field) {
+                    $query .= ' OR '.$field.' IS NULL';
+                }
+            }
+
+            // where is not null
+            if (!empty($this->whereNotNull)) {
+                $query .= ' WHERE '.$this->whereNull.' IS NOT NULL';
+            }
+
+            // and where is not null
+            if (!empty($this->andWhereNotNull)) {
+                foreach ($this->andWhereNotNull as $field) {
+                    $query .= ' AND '.$field.' IS NOT NULL';
+                }
+            }
+
+            // or where is not null
+            if (!empty($this->orWhereNotNull)) {
+                foreach ($this->orWhereNotNull as $field) {
+                    $query .= ' OR '.$field.' IS NOT NULL';
                 }
             }
 
