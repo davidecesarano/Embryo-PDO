@@ -106,7 +106,7 @@ For convenience, if you want to verify that a column is equal to a given value, 
 $user = $pdo->table('users')->where('id', 1)->select()->get();
 ```
 
-You may use `andWhere`, `orWhere` or `rawWhere` methods for adding clauses to query:
+You may use `andWhere`, `orWhere`, `whereNull`, `andWhereNull`, `orWhereNull`, `whereNotNull`, `andWhereNotNull`, `orwhereNotNull` or `rawWhere` methods for adding clauses to query:
 ```php
 // andWhere
 $users = $pdo->table('users')
