@@ -600,7 +600,7 @@
 
             // where is not null
             if (!empty($this->whereNotNull)) {
-                $query .= ' WHERE '.$this->whereNull.' IS NOT NULL';
+                $query .= ' WHERE '.$this->whereNotNull.' IS NOT NULL';
             }
 
             // and where is not null
