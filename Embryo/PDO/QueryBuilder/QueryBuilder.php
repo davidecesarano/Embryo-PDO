@@ -13,9 +13,13 @@
     namespace Embryo\PDO\QueryBuilder;
     
     use Embryo\PDO\QueryBuilder\Query;
+    use Embryo\PDO\QueryBuilder\Traits\{AliasesTrait, ComposeQueryTrait};
     
     class QueryBuilder
     {
+        use AliasesTrait;
+        use ComposeQueryTrait;
+
         /**
          * @var PDO $pdo
          */
@@ -49,77 +53,17 @@
         /**
          * @var array $leftJoin
          */
-        private $leftJoin = [];
-        
-        /**
-         * @var array $rightJoin
-         */
-        private $rightJoin = [];
-        
-        /**
-         * @var array $crossJoin
-         */
-        private $crossJoin = [];
-
-        /**
-         * @var array $innerJoin
-         */
-        private $innerJoin = [];
-
-        /**
-         * @var array $rawJoin
-         */
-        private $rawJoin = [];
+        private $join = [];
 
         /**
          * @var string $where
          */
-        private $where = '';
+        private $where = [];
 
         /**
-         * @var array $andWhere
+         * @var string $groupBy
          */
-        private $andWhere = [];
-        
-        /**
-         * @var array $orWhere
-         */
-        private $orWhere = [];
-
-        /**
-         * @var string $whereNull
-         */
-        private $whereNull = '';
-        
-        /**
-         * @var array $andWhereNull
-         */
-        private $andWhereNull = [];
-        
-        /**
-         * @var array $orWhereNull
-         */
-        private $orWhereNull = [];
-        
-        /**
-         * @var string $whereNotNull
-         */
-        private $whereNotNull = '';
-        
-        /**
-         * @var array $andWhereNotNull
-         */
-        private $andWhereNotNull = [];
-        
-        /**
-         * @var array $orWhereNotNull
-         */
-        private $orWhereNotNull = [];
-
-        /**
-         * @var array $rawWhere
-         */
-        private $rawWhere = [];
+        private $groupBy = '';
 
         /**
          * @var string $orderBy
@@ -132,14 +76,41 @@
         private $limit = '';
 
         /**
-         * @var string $groupBy
+         * @var int|bool $offset
          */
-        private $groupBy = '';
+        private $offset = false;
 
         /**
          * @var array $whereOperators
          */
-        private $whereOperators = ['=', '>', '>=', '<', '<=', '!='];
+        private $whereOperators = [
+            '=', 
+            '>', 
+            '>=', 
+            '<', 
+            '<=', 
+            '!=', 
+            '<>', 
+            'LIKE',
+            'NOT LIKE', 
+            'IS NULL', 
+            'IS NOT NULL', 
+            'IN', 
+            'NOT IN',
+            'BETWEEN',
+            'NOT BETWEEN',
+            'REGEXP'
+        ];
+
+        /**
+         * @var bool $startParentheses
+         */
+        private $startParentheses = false;
+
+        /**
+         * @var bool $endParentheses
+         */
+        private $endParentheses = false;
 
         /**
          * Set PDO connection and table.
@@ -154,7 +125,13 @@
         }
 
         /**
-         * Insert query.
+         * ------------------------------------------------------------
+         * STATEMENTS
+         * ------------------------------------------------------------
+         */
+
+        /**
+         * "INSERT" query.
          *
          * @param array $data
          * @return Query
@@ -167,7 +144,7 @@
         }
 
         /**
-         * Update query.
+         * "UPDATE" query.
          *
          * @param array $data
          * @return Query
@@ -180,7 +157,7 @@
         }
 
         /**
-         * Delete query.
+         * "DELETE" query.
          *
          * @param array $data
          * @return Query
@@ -193,7 +170,7 @@
         }
 
         /**
-         * Select query.
+         * "SELECT" query.
          *
          * @param string[] $field
          * @return Query
@@ -206,125 +183,193 @@
         }
 
         /**
-         * Left join query.
+         * SELECT statement shortened.
+         * 
+         * @return object|array
+         */
+        public function get()
+        {
+            $this->select = '*';
+            $query = $this->execute();
+            return $query->get();
+        }
+
+        /**
+         * ------------------------------------------------------------
+         * AGGREGATES
+         * ------------------------------------------------------------
+         */
+
+        /**
+         * Return rows count.
+         * 
+         * @return int
+         */
+        public function count(): int
+        {
+            $this->select = '*';
+            $query = $this->execute();
+            return $query->count();
+        }
+
+        /**
+         * Return max value.
+         * 
+         * @param string $field 
+         * @return mixed
+         */
+        public function max(string $field) 
+        {
+            $max = 'MAX('.$field.')';
+            $this->select = $max;
+            $query = $this->execute();
+            return $query->get()->{$max};
+        }
+
+        /**
+         * Return min value.
+         * 
+         * @param string $field 
+         * @return mixed
+         */
+        public function min(string $field) 
+        {
+            $min = 'MIN('.$field.')';
+            $this->select = $min;
+            $query = $this->execute();
+            return $query->get()->{$min};
+        }
+
+        /**
+         * Return average value.
+         * 
+         * @param string $field 
+         * @return mixed
+         */
+        public function avg(string $field) 
+        {
+            $avg = 'AVG('.$field.')';
+            $this->select = $avg;
+            $query = $this->execute();
+            return $query->get()->{$avg};
+        }
+
+        /**
+         * Return sum value's column.
+         * 
+         * @param string $field 
+         * @return mixed
+         */
+        public function sum(string $field) 
+        {
+            $sum = 'SUM('.$field.')';
+            $this->select = $sum;
+            $query = $this->execute();
+            return $query->get()->{$sum};
+        }
+
+        /**
+         * ------------------------------------------------------------
+         * JOIN
+         * ------------------------------------------------------------
+         */
+
+        /**
+         * LEFT JOIN.
          *
          * @param string $join
          * @return self
          */
         public function leftJoin(string $join): self
         {
-            $this->leftJoin[] = $join;
+            $this->join[] = [
+                'type' => 'LEFT',
+                'sql'  => trim($join)
+            ];
             return $this;
         }
 
         /**
-         * Right join query.
+         * RIGHT JOIN.
          *
          * @param string $join
          * @return self
          */
         public function rightJoin(string $join): self 
         {
-            $this->rightJoin[] = $join;
+            $this->join[] = [
+                'type' => 'RIGHT',
+                'sql'  => trim($join)
+            ];
             return $this;
         }
 
         /**
-         * Cross join query.
+         * CROSS JOIN.
          *
          * @param string $join
          * @return self
          */
         public function crossJoin(string $join): self 
         {
-            $this->crossJoin[] = $join;
+            $this->join[] = [
+                'type' => 'CROSS',
+                'sql'  => trim($join)
+            ];
             return $this;
         }
 
         /**
-         * Inner join query.
+         * INNER JOIN.
          *
          * @param string $join
          * @return self
          */
         public function innerJoin(string $join): self 
         {
-            $this->innerJoin[] = $join;
+            $this->join[] = [
+                'type' => 'INNER',
+                'sql'  => trim($join)
+            ];
             return $this;
         }
 
         /**
-         * Raw join query.
+         * Raw join.
          *
          * @param string $join
          * @return self
          */
         public function rawJoin(string $join): self 
         {
-            $this->rawJoin[] = $join;
+            $this->join[] = [
+                'type' => '',
+                'sql'  => trim($join)
+            ];
             return $this;
         }
 
         /**
-         * Where clauses.
+         * ------------------------------------------------------------
+         * WHERE CONDITION
+         * ------------------------------------------------------------
+         */
+
+        /**
+         * "WHERE" and "AND" condition.
          *
          * @param string $field
          * @param mixed $operatorValue
          * @param mixed|null $value
          * @return self
          */
-        public function where(string $field, $operatorValue, $value = null): self
+        public function where($field, $operatorValue = null, $value = null): self
         {   
-            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
-                
-                $this->where = [
-                    'field'    => $field,
-                    'operator' => $operatorValue,
-                    'value'    => $value
-                ];
-
-            } else {
-                
-                $this->where = [
-                    'field'    => $field,
-                    'operator' => '=',
-                    'value'    => $operatorValue
-                ];
-            }
-            return $this;
+            return $this->addWhere('AND', $field, $operatorValue, $value);
         }
 
         /**
-         * And where clauses.
-         *
-         * @param string $field
-         * @param mixed $operatorValue
-         * @param mixed|null $value
-         * @return self
-         */
-        public function andWhere($field, $operatorValue, $value = null): self
-        {
-            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
-                
-                $this->andWhere[] = [
-                    'field'    => $field,
-                    'operator' => $operatorValue,
-                    'value'    => $value
-                ];
-
-            } else {
-                
-                $this->andWhere[] = [
-                    'field'    => $field,
-                    'operator' => '=',
-                    'value'    => $operatorValue
-                ];
-            }
-            return $this;
-        }
-
-        /**
-         * Or where clauses.
+         * "OR" condition.
          *
          * @param string $field
          * @param mixed $operatorValue
@@ -333,112 +378,222 @@
          */
         public function orWhere($field, $operatorValue, $value = null): self
         {
-            if ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) {
-                
-                $this->orWhere[] = [
-                    'field'    => $field,
-                    'operator' => $operatorValue,
-                    'value'    => $value
-                ];
+            return $this->addWhere('OR', $field, $operatorValue, $value);
+        }
 
-            } else {
-                
-                $this->orWhere[] = [
-                    'field'    => $field,
-                    'operator' => '=',
-                    'value'    => $operatorValue
-                ];
+        /**
+         * "WHERE IS NULL" and "AND IS NULL" condition.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function whereNull(string $field): self 
+        {
+            return $this->addWhere('AND', $field, 'IS NULL');
+        }
+
+        /**
+         * "OR IS NULL" condition.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function orWhereNull(string $field): self 
+        {
+            return $this->addWhere('OR', $field, 'IS NULL');
+        }
+
+        /**
+         * "WHERE IS NOT NULL" and "AND IS NOT NULL" condition.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function whereNotNull(string $field): self 
+        {
+            return $this->addWhere('AND', $field, 'IS NOT NULL');
+        }
+
+        /**
+         * "OR IS NOT NULL" condition.
+         *
+         * @param string $field
+         * @return self
+         */
+        public function orWhereNotNull(string $field): self 
+        {
+            return $this->addWhere('OR', $field, 'IS NOT NULL');
+        }
+
+        /**
+         * "WHERE IN" and "AND IN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
+         * @return self
+         */
+        public function whereIn(string $field, array $values): self 
+        {
+            return $this->addWhere('AND', $field, 'IN', $values);
+        }
+
+        /**
+         * "OR IN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
+         * @return self
+         */
+        public function orWhereIn(string $field, array $values): self 
+        {
+            return $this->addWhere('OR', $field, 'IN', $values);
+        }
+
+        /**
+         * "WHERE NOT IN" and "AND NOT IN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
+         * @return self
+         */
+        public function whereNotIn(string $field, array $values): self 
+        {
+            return $this->addWhere('AND', $field, 'NOT IN', $values);
+        }
+
+        /**
+         * "OR NOT IN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
+         * @return self
+         */
+        public function orWhereNotIn(string $field, array $values): self 
+        {
+            return $this->addWhere('OR', $field, 'NOT IN', $values);
+        }
+        
+        /**
+         * "WHERE BETWEEN" and "AND BETWEEN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
+         * @return self
+         * @throws InvalidArgumentException
+         */
+        public function whereBetween(string $field, array $values): self 
+        {
+            if (count($values) !== 2) {
+                throw new \InvalidArgumentException('Between condition must have two values');
             }
-            return $this;
+            return $this->addWhere('AND', $field, 'BETWEEN', $values);
         }
 
         /**
-         * Where is null clause.
-         *
-         * @param string $field
+         * "OR BETWEEN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
          * @return self
+         * @throws InvalidArgumentException
          */
-        public function whereNull(string $field) 
+        public function orWhereBetween(string $field, array $values): self 
         {
-            $this->whereNull = $field;
-            return $this;
+            if (count($values) !== 2) {
+                throw new \InvalidArgumentException('Between condition must have two values');
+            }
+            return $this->addWhere('OR', $field, 'BETWEEN', $values);
         }
 
         /**
-         * And where is null clauses.
-         *
-         * @param string $field
+         * "WHERE NOT BETWEEN" and "AND NOT BETWEEN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
          * @return self
+         * @throws InvalidArgumentException
          */
-        public function andWhereNull(string $field) 
+        public function whereNotBetween(string $field, array $values): self 
         {
-            $this->andWhereNull[] = $field; 
-            return $this;
+            if (count($values) !== 2) {
+                throw new \InvalidArgumentException('Between condition must have two values');
+            }
+            return $this->addWhere('AND', $field, 'NOT BETWEEN', $values);
         }
 
         /**
-         * Or where is null clauses.
-         *
-         * @param string $field
+         * "OR NOT BETWEEN" condition.
+         * 
+         * @param string $field 
+         * @param array $values 
          * @return self
+         * @throws InvalidArgumentException
          */
-        public function orWhereNull(string $field) 
+        public function orWhereNotBetween(string $field, array $values): self 
         {
-            $this->orWhereNull[] = $field;
-            return $this;
+            if (count($values) !== 2) {
+                throw new \InvalidArgumentException('Between condition must have two values');
+            }
+            return $this->addWhere('OR', $field, 'NOT BETWEEN', $values);
         }
 
         /**
-         * Where is not null clause.
-         *
-         * @param string $field
-         * @return self
-         */
-        public function whereNotNull(string $field) 
-        {
-            $this->whereNotNull = $field;
-            return $this;
-        }
-
-        /**
-         * And where is not null clauses.
-         *
-         * @param string $field
-         * @return self
-         */
-        public function andWhereNotNull(string $field) 
-        {
-            $this->andWhereNotNull[] = $field; 
-            return $this;
-        }
-
-        /**
-         * Or where is not null clauses.
-         *
-         * @param string $field
-         * @return self
-         */
-        public function orWhereNotNull(string $field) 
-        {
-            $this->orWhereNotNull[] = $field; 
-            return $this;
-        }
-
-        /**
-         * Raw Where clauses.
-         *
+         * Raw where condition.
+         * 
          * @param string $where
          * @param array $values
          * @return self
          */
         public function rawWhere(string $where, array $values = []): self
         {
-            $this->rawWhere = [
-                'query'  => ' '.$where,
-                'values' => $values 
-            ];
+           return $this->addWhere('', $where, null, $values);
+        }
+
+        /**
+         * Add WHERE condition.
+         * 
+         * @param string $clause 
+         * @param string|callback $field 
+         * @param mixed $operatorValue 
+         * @param mixed $value 
+         * @return self
+         * @throws InvalidArgumentException
+         */
+        private function addWhere($clause, $field, $operatorValue = null, $value = null): self
+        {
+            if (!is_string($field) && !is_callable($field)) {
+                throw new \InvalidArgumentException("First parameter must be a string or callable");
+            }
+
+            if (is_callable($field)) {
+
+                $this->startParentheses = true;  
+                call_user_func($field, $this);
+                $last = (count($this->where))-1;
+                $this->where[$last]['endParentheses'] = true;
+
+            } else {
+ 
+                $operator = ($operatorValue !== 0 && in_array($operatorValue, $this->whereOperators)) ? $operatorValue : '=';
+                $this->where[] = [
+                    'clause'           => $clause,
+                    'field'            => trim($field),
+                    'operator'         => trim($operator),
+                    'value'            => ($value) ? $value : $operatorValue,
+                    'startParentheses' => $this->startParentheses,
+                    'endParentheses'   => $this->endParentheses
+                ];
+
+            }
+            $this->startParentheses = false;
             return $this;
         }
+
+        /**
+         * ------------------------------------------------------------
+         * ORDERING, GROUPING, LIMIT AND OFFSET
+         * ------------------------------------------------------------
+         */
 
         /**
          * Group by query.
@@ -448,19 +603,19 @@
          */
         public function groupBy(string $groupBy): self 
         {
-            $this->groupBy = $groupBy;
+            $this->groupBy = trim($groupBy);
             return $this;
         }
 
         /**
          * Order by query.
          *
-         * @param string $order
+         * @param string $orderBy
          * @return self
          */
-        public function orderBy(string $order): self
+        public function orderBy(string $orderBy): self
         {
-            $this->orderBy = $order;
+            $this->orderBy = trim($orderBy);
             return $this;
         }
 
@@ -472,9 +627,27 @@
          */
         public function limit(string $limit): self
         {
-            $this->limit = $limit;
+            $this->limit = trim($limit);
             return $this;
         }
+
+        /**
+         * Offset query.
+         * 
+         * @param int $offset
+         * @return self
+         */
+        public function offset(int $offset): self
+        {
+            $this->offset = $offset;
+            return $this;
+        }
+
+        /**
+         * ------------------------------------------------------------
+         * COMPOSE AND EXECUTE QUERY
+         * ------------------------------------------------------------
+         */
 
         /**
          * Execute query.
@@ -483,160 +656,14 @@
          */
         private function execute(): Query
         {
-            $query  = '';
-            $values = [];
-
-            // select
-            if ($this->select) {
-                $query .= 'SELECT '.$this->select. ' FROM '.$this->table;
-            }
-
-            // insert
-            if (!empty($this->insert)) {
-                $values      = $this->insert;
-                $queryKeys   = implode(", ", array_keys($values));
-                $queryValues = ':'.implode(", :", array_keys($values));
-                $query       .= 'INSERT INTO '.$this->table.' ('.$queryKeys.') VALUES ('.$queryValues.')';
-            }
-
-            // update
-            if (!empty($this->update)) {
-                $set      = $this->update;
-                $querySet = NULL;
-                foreach($set as $key => $value){
-                    $querySet .= "$key = :$key,";
-                    $values[$key] = $value;
-                }
-                $querySet = rtrim($querySet, ',');
-                $query .= 'UPDATE '.$this->table.' SET '.$querySet;
-            }
-
-            // delete
-            if ($this->delete) {
-                $query .= 'DELETE FROM '.$this->table;
-            }
-
-            // left join
-            if (!empty($this->leftJoin)) {
-                foreach ($this->leftJoin as $join) {
-                    $query .= ' LEFT JOIN '.$join;
-                }
-            }
-
-            // right join
-            if (!empty($this->rightJoin)) {
-                foreach ($this->rightJoin as $join) {
-                    $query .= ' RIGHT JOIN '.$join;
-                }
-            }
-
-            // cross join
-            if (!empty($this->crossJoin)) {
-                foreach ($this->crossJoin as $join) {
-                    $query .= ' CROSS JOIN '.$join;
-                }
-            }
-
-            // inner join
-            if (!empty($this->innerJoin)) {
-                foreach ($this->innerJoin as $join) {
-                    $query .= ' INNER JOIN '.$join;
-                }
-            }
-
-            // raw join 
-            if (!empty($this->rawJoin)) {
-                foreach ($this->rawJoin as $join) {
-                    $query .= ' '.$join;
-                }
-            }
-
-            // where
-            if (!empty($this->where)) {
-                $field = str_replace('.', '', $this->where['field']);
-                $whereRaw = $this->where['field'].' '.$this->where['operator'].' :'.$field;
-                $query .= ' WHERE '.$whereRaw;
-                $values[$field] = $this->where['value'];
-            }
-
-            // and where
-            if (!empty($this->andWhere)) {
-                foreach ($this->andWhere as $andWhere) {
-                    $field = str_replace('.', '', $andWhere['field']);
-                    $andWhereRaw = $andWhere['field'].' '.$andWhere['operator'].' :'.$field;
-                    $query .= ' AND '.$andWhereRaw;
-                    $values[$field] = $andWhere['value'];
-                }
-            }
-
-            // or where
-            if (!empty($this->orWhere)) {
-                foreach ($this->orWhere as $orWhere) {
-                    $field = str_replace('.', '', $orWhere['field']);
-                    $orWhereRaw = $orWhere['field'].' '.$orWhere['operator'].' :'.$field;
-                    $query .= ' OR '.$orWhereRaw;
-                    $values[$field] = $orWhere['value'];
-                }
-            }
-
-            // where is null
-            if (!empty($this->whereNull)) {
-                $query .= ' WHERE '.$this->whereNull.' IS NULL';
-            }
-
-            // and where is null
-            if (!empty($this->andWhereNull)) {
-                foreach ($this->andWhereNull as $field) {
-                    $query .= ' AND '.$field.' IS NULL';
-                }
-            }
-
-            // or where is null
-            if (!empty($this->orWhereNull)) {
-                foreach ($this->orWhereNull as $field) {
-                    $query .= ' OR '.$field.' IS NULL';
-                }
-            }
-
-            // where is not null
-            if (!empty($this->whereNotNull)) {
-                $query .= ' WHERE '.$this->whereNotNull.' IS NOT NULL';
-            }
-
-            // and where is not null
-            if (!empty($this->andWhereNotNull)) {
-                foreach ($this->andWhereNotNull as $field) {
-                    $query .= ' AND '.$field.' IS NOT NULL';
-                }
-            }
-
-            // or where is not null
-            if (!empty($this->orWhereNotNull)) {
-                foreach ($this->orWhereNotNull as $field) {
-                    $query .= ' OR '.$field.' IS NOT NULL';
-                }
-            }
-
-            // raw where
-            if (!empty($this->rawWhere)) {
-                $query .= $this->rawWhere['query'];
-                $values = array_merge($values, $this->rawWhere['values']);
-            }
-
-            // group by
-            if ($this->groupBy) {
-                $query .= ' GROUP BY '.$this->groupBy;
-            }
-
-            // order by
-            if ($this->orderBy) {
-                $query .= ' ORDER BY '.$this->orderBy;
-            }
-
-            // limit
-            if ($this->limit) {
-                $query .= ' LIMIT '.$this->limit;
-            }
+            $query = $this->composeStatement()['query'];
+            $query .= $this->composeJoins();
+            $query .= $this->composeWhereConditions()['query'];          
+            $query .= $this->composeGroupBy();
+            $query .= $this->composeOrderBy();
+            $query .= $this->composeLimit();
+            $query .= $this->composeOffset();
+            $values = array_merge($this->composeStatement()['values'], $this->composeWhereConditions()['values']);
 
             return (new Query($this->pdo))
                 ->query($query)
