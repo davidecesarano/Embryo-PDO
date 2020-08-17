@@ -46,7 +46,7 @@
         public function connection(string $connectionName = 'local'): Connection
         {
             if (!isset($this->database[$connectionName])) {
-                throw new \InvalidArgumentException("Database $database doesn't exists.");
+                throw new \InvalidArgumentException("Database $connectionName doesn't exists.");
             }
 
             try {
