@@ -58,6 +58,7 @@
          * 
          * @param Closure $callback
          * @return mixed
+         * @throws PDOException
          */
         public function transaction(\Closure $callback)
         {
