@@ -80,11 +80,9 @@
                 if (!is_array($value)) {
                     $this->stmt->bindValue(":$key", $value);
                 } else {
-                    
                     foreach($value as $k => $v){
                         $this->stmt->bindValue(":$k", $v);
                     }
-                    
                 }
                 
             }
@@ -96,13 +94,13 @@
          * or emit PDO exception.
          *
          * @return void
+         * @throws PDOException
          */
         public function execute()
         {
             try {
                 $this->execute = $this->stmt->execute();
                 $this->lastInsertId = $this->pdo->lastInsertId();
-
             } catch (\PDOException $e) {
                 throw new \PDOException($e->getMessage());
             }
@@ -121,7 +119,8 @@
         }
 
         /**
-         * Execute and return last insert id.
+         * Execute and return last 
+         * insert id.
          *
          * @return int
          */
@@ -143,14 +142,18 @@
         }
 
         /**
-         * Execute and return a single
-         * object row.
+         * Execute and return an 
+         * object row or an array of
+         * objects.
          *
-         * @return object|bool
+         * @return object|array
          */
         public function get()
         {
             $this->execute();
+            if ($this->stmt->rowCount() > 1) {
+                return $this->stmt->fetchAll(\PDO::FETCH_OBJ);
+            }
             return $this->stmt->fetch(\PDO::FETCH_OBJ);
         }
 
@@ -158,9 +161,9 @@
          * Execute and return an array
          * of objects.
          *
-         * @return array|bool
+         * @return array
          */
-        public function all()
+        public function all(): array
         {
             $this->execute();
             return $this->stmt->fetchAll(\PDO::FETCH_OBJ);
@@ -178,5 +181,15 @@
             $output = ob_get_contents();
             ob_end_clean();
             return '<pre>'.htmlspecialchars($output).'</pre>';
+        }
+
+        /**
+         * Print query.
+         * 
+         * @return string
+         */
+        public function __toString(): string
+        {
+            return $this->query;
         }
     }
