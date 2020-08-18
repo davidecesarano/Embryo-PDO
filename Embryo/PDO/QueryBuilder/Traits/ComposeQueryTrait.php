@@ -101,7 +101,7 @@
                         $in = '';
                         $field = str_replace('.', '', $where['field']);
                         foreach ($where['value'] as $x => $item) {
-                            $key = $field.$x;
+                            $key = $field.'in'.$x;
                             $in .= ":$key, ";
                             $values[$key] = $item;
                         }
@@ -121,7 +121,7 @@
                         $values = array_merge($values, $where['value']);
 
                     } else {
-                        $field          = str_replace('.', '', $where['field']);
+                        $field          = str_replace('.', '', $where['field']).$i;
                         $whereRaw       = $where['field'].' '.$where['operator'].' :'.$field;
                         $values[$field] = $where['value'];
                     }
