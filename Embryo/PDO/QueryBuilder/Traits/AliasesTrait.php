@@ -140,6 +140,17 @@
          * @param string $field
          * @return self
          */
+        public function orWhereIsNull(string $field): self
+        {
+            return $this->orWhereNull($field);
+        }
+
+        /**
+         * Alias of orWhereNull().
+         *
+         * @param string $field
+         * @return self
+         */
         public function orNull(string $field): self
         {
             return $this->orWhereNull($field);
