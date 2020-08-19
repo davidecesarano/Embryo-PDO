@@ -1,5 +1,4 @@
-# Embryo PDO
-A quick and light PHP query builder using PDO.
+# A quick and light PHP query builder using PDO.
 ```php
 $users = $pdo->table('users')
     ->where('country', 'Italy')
@@ -251,6 +250,7 @@ Below is a table with all the methods of the where conditions and their aliases.
 | orWhereNull()       	| orNull()<br>orWhereIsNull()<br>orIsNull()                                                      	|
 | whereNotNull()      	| andNotNull()<br>andWhereNotNull()<br>whereIsNotNull()<br>andIsNotNull()<br>andWhereIsNotNull() 	|
 | orWhereNotNull()    	| orNotNull()<br>orWhereIsNotNull()<br>orIsNotNull()                                             	|
+
 ### Joins
 
 The query builder may also be used to write simple join statements with `leftJoin`, `rightJoin`, `crossJoin`, `innerJoin` or `rawJoin` methods:
