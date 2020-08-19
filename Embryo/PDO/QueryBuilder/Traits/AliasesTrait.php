@@ -240,6 +240,17 @@
         }
 
         /**
+         * Alias of orWhereNotNull().
+         *
+         * @param string $field
+         * @return self
+         */
+        public function orWhereIsNotNull($field): self
+        {
+            return $this->orWhereNotNull($field);
+        }
+
+        /**
          * ------------------------------------------------------------
          * IN
          * ------------------------------------------------------------
