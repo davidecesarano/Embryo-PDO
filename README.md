@@ -1,7 +1,7 @@
 # Embryo PDO
 A quick and light PHP query builder using PDO.
 ```php
-$user = $pdo->table('users')
+$users = $pdo->table('users')
     ->where('country', 'Italy')
     ->and('city', 'Naples')
     ->and(function($query) {
@@ -25,24 +25,27 @@ $ composer require davidecesarano/embryo-pdo
 
 ## Usage
 * [Connection](#connection)
-* [Retrieving results](#retriving-results)
-    * [Retrieving a single row](#)
-    * [Forcing array](#)
-    * [Aggregates](#)
+* [Retrieving results](#retrieving-results)
+    * [Retrieving a single row](#retrieving-a-single-row)
+    * [Forcing array](#forcing-array)
+    * [Aggregates](#aggregates)
 * [Where conditions](#where-conditions)
-    * [Simple Where](#)
-    * [OR condition](#)
-    * [AND/OR closure](#)
-    * [BETWEEN condition](#)
-    * [IN condition](#)
-    * [IS NULL condition](#)
+    * [Simple Where](#simple-where)
+    * [OR condition](#or-condition)
+    * [AND/OR closure](#andor-closure)
+    * [BETWEEN condition](#between-condition)
+    * [IN condition](#in-condition)
+    * [IS NULL condition](#is-null-condition)
+    * [Raw Where](#raw-where)
+    * [Method Aliases](#method-aliases)
 * [Joins](#joins)
 * [Insert](#insert)
 * [Update](#update)
 * [Delete](#delete)
-* [Ordering, limit, grouping](#ordering-limit-grouping)
+* [Ordering, grouping, limit and offset](#ordering-grouping-limit-and-offset)
 * [Raw Query](#raw-query)
 * [Security](#security)
+* [Debugging](#debugging)
 
 ### Connection
 
@@ -218,6 +221,17 @@ $user = $pdo->table('users')
     ->get()
 ```
 
+#### Raw Where
+The `rawWhere` method can be used to inject a raw where condition into your query. This method accept an array of bindings argument.  
+```php
+$users = $pdo->table('users')
+    ->rawWhere('WHERE age = :age AND role = :role', [
+        'age' => 20,
+        'role' => 1
+    ])
+    ->get();
+```
+
 #### Method aliases
 Below is a table with all the methods of the where conditions and their aliases.
 
@@ -310,7 +324,13 @@ $delete = $pdo->table('users')
 // $delete return TRUE or FALSE
 ```
 
-### Ordering, limit, grouping
+### Ordering, grouping, limit and offset
+You may use the `groupBy` method to group the query results.
+```php
+$users = $pdo->table('users')
+    ->groupBy('role')
+    ->get();
+```
 The `orderBy` method allows you to sort the result of the query by a given column:
 ```php
 $users = $pdo->table('users')
@@ -323,12 +343,14 @@ $users = $pdo->table('users')
     ->limit('0,10')
     ->get();
 ```
-You may use the `groupBy` method to group the query results.
+To skip a given number of results in the query, you may use the `limit` and `offset` methods:
 ```php
 $users = $pdo->table('users')
-    ->groupBy('role')
+    ->limit('10')
+    ->offset(5)
     ->get();
 ```
+
 ### Raw Query
 
 Sometimes you may need to use a raw expression in a query. To create a raw expression, you may use the `query` method:
@@ -349,3 +371,43 @@ The `values` method binds a value to a parameter. Binds a value to a correspondi
 
 ### Security
 Embryo PDO uses **PDO parameter binding** to protect your application against SQL injection attacks. There is no need to clean strings being passed as bindings.
+
+### Debugging
+You may use the `debug` method for for to dumps the information contained by a prepared statement directly on the output.
+```php
+    $fruits = $pdo->table('fruit')
+        ->where('calories', '<', 30)
+        ->and('colour', 'red')
+        ->select('name', 'colour', 'calories')
+        ->debug()
+```
+This would build the output below:
+```txt
+SQL: [96] SELECT name, colour, calories
+    FROM fruit
+    WHERE calories < :calories AND colour = :colour
+Params:  2
+Key: Name: [9] :calories
+paramno=-1
+name=[9] ":calories"
+is_param=1
+param_type=1
+Key: Name: [7] :colour
+paramno=-1
+name=[7] ":colour"
+is_param=1
+param_type=2
+```
+If you want only to show query, you may print object:
+```php
+echo $pdo->table('fruit')
+    ->where('calories', '<', 30)
+    ->and('colour', 'red')
+    ->select('name', 'colour', 'calories')
+```
+This would build the output below:
+```txt
+SELECT name, colour, calories
+FROM fruit
+WHERE calories < :calories AND colour = :colour
+```
