@@ -56,7 +56,7 @@
         private $join = [];
 
         /**
-         * @var string $where
+         * @var array $where
          */
         private $where = [];
 
@@ -159,7 +159,6 @@
         /**
          * "DELETE" query.
          *
-         * @param array $data
          * @return Query
          */
         public function delete(): Query
@@ -192,6 +191,20 @@
             $this->select = '*';
             $query = $this->execute();
             return $query->get();
+        }
+
+        /**
+         * Debug query shortened.
+         * 
+         * Works only for SELECT statement.
+         * 
+         * @return string
+         */
+        public function debug(): string
+        {
+            $this->select = '*';
+            $query = $this->execute();
+            return $query->debug();
         }
 
         /**
@@ -358,7 +371,7 @@
         /**
          * "WHERE" and "AND" condition.
          *
-         * @param string $field
+         * @param string|callback $field
          * @param mixed $operatorValue
          * @param mixed|null $value
          * @return self
@@ -371,7 +384,7 @@
         /**
          * "OR" condition.
          *
-         * @param string $field
+         * @param string|callback $field
          * @param mixed $operatorValue
          * @param mixed|null $value
          * @return self
