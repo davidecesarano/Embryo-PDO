@@ -1,4 +1,4 @@
-# A quick and light PHP query builder using PDO.
+# A quick and light PHP query builder using PDO
 ```php
 $users = $pdo->table('users')
     ->where('country', 'Italy')
