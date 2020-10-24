@@ -17,7 +17,7 @@
     class Connection 
     {
         /**
-         * @var PDO $pdo
+         * @var \PDO $pdo
          */
         private $pdo;
         
@@ -56,9 +56,9 @@
         /**
          * Transaction
          * 
-         * @param Closure $callback
+         * @param \Closure $callback
          * @return mixed
-         * @throws PDOException
+         * @throws \PDOException
          */
         public function transaction(\Closure $callback)
         {

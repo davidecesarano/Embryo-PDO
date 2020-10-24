@@ -24,7 +24,7 @@
         private $query;
 
         /**
-         * @var \PDOStatement|bool $stmt
+         * @var \PDOStatement $stmt
          */
         private $stmt;
         
@@ -41,7 +41,7 @@
         /**
          * @var int $lastInsertId
          */
-        private $lastInsertId = [];
+        private $lastInsertId;
 
         /**
          * Set PDO.
@@ -71,6 +71,7 @@
          *
          * @param array $values
          * @return self
+         * @throws \PDOException
          */
         public function values(array $values): self
         {
@@ -94,13 +95,13 @@
          * or emit PDO exception.
          *
          * @return void
-         * @throws PDOException
+         * @throws \PDOException
          */
         public function execute()
         {
             try {
                 $this->execute = $this->stmt->execute();
-                $this->lastInsertId = $this->pdo->lastInsertId();
+                $this->lastInsertId = (int) $this->pdo->lastInsertId();
             } catch (\PDOException $e) {
                 throw new \PDOException($e->getMessage());
             }
@@ -138,7 +139,7 @@
         public function count(): int
         {
             $this->execute();
-            return $this->stmt->rowCount();
+            return (int) $this->stmt->rowCount();
         }
 
         /**
@@ -146,7 +147,7 @@
          * object row or an array of
          * objects.
          *
-         * @return object|array
+         * @return object|array|bool
          */
         public function get()
         {
@@ -166,7 +167,8 @@
         public function all(): array
         {
             $this->execute();
-            return $this->stmt->fetchAll(\PDO::FETCH_OBJ);
+            $data = $this->stmt->fetchAll(\PDO::FETCH_OBJ);
+            return $data ?: [];
         }
 
         /**
@@ -178,7 +180,7 @@
         {
             ob_start();
             $this->stmt->debugDumpParams();
-            $output = ob_get_contents();
+            $output = ob_get_contents() ?: '';
             ob_end_clean();
             return '<pre>'.htmlspecialchars($output).'</pre>';
         }

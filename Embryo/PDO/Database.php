@@ -40,8 +40,8 @@
          *
          * @param string $connectionName
          * @return Connection
-         * @throws InvalidArgumentException
-         * @throws PDOException
+         * @throws \InvalidArgumentException
+         * @throws \PDOException
          */
         public function connection(string $connectionName = 'local'): Connection
         {

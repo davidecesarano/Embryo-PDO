@@ -21,7 +21,7 @@
         use ComposeQueryTrait;
 
         /**
-         * @var PDO $pdo
+         * @var \PDO $pdo
          */
         private $pdo;
         
@@ -51,7 +51,7 @@
         private $delete = false;
         
         /**
-         * @var array $leftJoin
+         * @var array $join
          */
         private $join = [];
 
@@ -184,7 +184,7 @@
         /**
          * SELECT statement shortened.
          * 
-         * @return object|array
+         * @return object|array|bool
          */
         public function get()
         {
@@ -371,7 +371,7 @@
         /**
          * "WHERE" and "AND" condition.
          *
-         * @param string|callback $field
+         * @param string|callable $field
          * @param mixed $operatorValue
          * @param mixed|null $value
          * @return self
@@ -384,7 +384,7 @@
         /**
          * "OR" condition.
          *
-         * @param string|callback $field
+         * @param string|callable $field
          * @param mixed $operatorValue
          * @param mixed|null $value
          * @return self
@@ -492,7 +492,7 @@
          * @param string $field 
          * @param array $values 
          * @return self
-         * @throws InvalidArgumentException
+         * @throws \InvalidArgumentException
          */
         public function whereBetween(string $field, array $values): self 
         {
@@ -508,7 +508,7 @@
          * @param string $field 
          * @param array $values 
          * @return self
-         * @throws InvalidArgumentException
+         * @throws \InvalidArgumentException
          */
         public function orWhereBetween(string $field, array $values): self 
         {
@@ -524,7 +524,7 @@
          * @param string $field 
          * @param array $values 
          * @return self
-         * @throws InvalidArgumentException
+         * @throws \InvalidArgumentException
          */
         public function whereNotBetween(string $field, array $values): self 
         {
@@ -540,7 +540,7 @@
          * @param string $field 
          * @param array $values 
          * @return self
-         * @throws InvalidArgumentException
+         * @throws \InvalidArgumentException
          */
         public function orWhereNotBetween(string $field, array $values): self 
         {
@@ -566,11 +566,11 @@
          * Add WHERE condition.
          * 
          * @param string $clause 
-         * @param string|callback $field 
+         * @param string|callable $field 
          * @param mixed $operatorValue 
          * @param mixed $value 
          * @return self
-         * @throws InvalidArgumentException
+         * @throws \InvalidArgumentException
          */
         private function addWhere($clause, $field, $operatorValue = null, $value = null): self
         {
