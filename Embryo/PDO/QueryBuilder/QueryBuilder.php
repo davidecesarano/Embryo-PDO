@@ -194,6 +194,19 @@
         }
 
         /**
+         * SELECT statement shortened
+         * for to force array.
+         * 
+         * @return array
+         */
+        public function all()
+        {
+            $this->select = '*';
+            $query = $this->execute();
+            return $query->all();
+        }
+
+        /**
          * Debug query shortened.
          * 
          * Works only for SELECT statement.
