@@ -44,6 +44,7 @@ $ composer require davidecesarano/embryo-pdo
 * [Delete](#delete)
 * [Ordering, grouping, limit and offset](#ordering-grouping-limit-and-offset)
 * [Raw Query](#raw-query)
+* [Pagination](#pagination)
 * [Security](#security)
 * [Debugging](#debugging)
 
@@ -369,6 +370,42 @@ $users = $pdo->query("
 ```
 The `values` method binds a value to a parameter. Binds a value to a corresponding named placeholder in the SQL statement that was used to prepare the statement.  
 
+### Pagination
+Pagination means displaying all your fetched results in multiple pages instead of showing them all on one page.
+```php
+$current_page = 1;
+$perPage = 15;
+$users = $pdo->table("users")->paginate($current_page, $perPage);
+```
+We will have this result:
+```json
+{
+   "total": 50,
+   "per_page": 15,
+   "current_page": 1,
+   "last_page": 4,
+   "first_page": 1,
+   "next_page_url": 2,
+   "prev_page": null,
+   "from": 1,
+   "to": 15,
+   "data":[
+        {
+            // Record...
+        },
+        {
+            // Record...
+        }
+   ]
+}
+```
+If you want retrieve specific fields from records you may use:
+```php
+$current_page = 1;
+$perPage = 15;
+$fields = 'id, first_name, last_name';
+$users = $pdo->table("users")->paginate($current_page, $perPage, $fields);
+```
 ### Security
 Embryo PDO uses **PDO parameter binding** to protect your application against SQL injection attacks. There is no need to clean strings being passed as bindings.
 

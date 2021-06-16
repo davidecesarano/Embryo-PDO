@@ -207,6 +207,44 @@
         }
 
         /**
+         * Pagination.
+         * 
+         * @param int $page 
+         * @param int $perPage
+         * @param string $select 
+         * @return object
+         */
+        public function paginate(int $page = 1, int $perPage = 50, string $select = '*'): object
+        {
+            $this->select = $select;
+
+            $query  = $this->execute();
+            $total  = $query->count();
+            $offset = ($page-1) * $perPage;
+            $pages  = ceil($total / $perPage);
+            $next   = ($page == $pages) ? NULL : $page+1;
+            $prev   = ($page == 1) ? NULL : $page-1;
+            $from   = $offset+1;
+            $to     = $offset+$perPage < $total ? $offset+$perPage : $total;
+
+            $this->limit = $offset.', '.$perPage;
+            $query = $this->execute();
+            $data = $query->all();
+
+            return (object) [
+                'total'        => $total,
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => $pages,
+                'next_page'    => $next,
+                'prev_page'    => $prev,
+                'from'         => $from,
+                'to'           => $to,
+                'data'         => $data
+            ];
+        }
+
+        /**
          * Debug query shortened.
          * 
          * Works only for SELECT statement.
