@@ -52,29 +52,4 @@
         {
             return (new Query($this->pdo))->query($query);
         }
-
-        /**
-         * Transaction
-         * 
-         * @param \Closure $callback
-         * @return mixed
-         * @throws \PDOException
-         */
-        public function transaction(\Closure $callback)
-        {
-            $callback = \Closure::bind($callback, $this);
-            try {
-
-                $this->pdo->beginTransaction();
-                $result = $callback();
-                $this->pdo->commit();
-                return $result;
-
-            } catch (\PDOException $e) {
-                
-                $this->pdo->rollback();
-                throw new \PDOException($e->getMessage());
-                
-            }
-        }
     }
