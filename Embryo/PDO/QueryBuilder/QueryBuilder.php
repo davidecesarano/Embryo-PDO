@@ -12,6 +12,7 @@
 
     namespace Embryo\PDO\QueryBuilder;
     
+    use Embryo\Http\Factory\ServerRequestFactory;
     use Embryo\PDO\QueryBuilder\Query;
     use Embryo\PDO\QueryBuilder\Traits\{AliasesTrait, ComposeQueryTrait};
     
@@ -209,23 +210,25 @@
         /**
          * Pagination.
          * 
-         * @param int $page 
          * @param int $perPage
          * @param string $select 
          * @return object
          */
-        public function paginate(int $page = 1, int $perPage = 50, string $select = '*'): object
+        public function paginate(int $perPage = 50, string $select = '*'): object
         {
             $this->select = $select;
 
-            $query  = $this->execute();
-            $total  = $query->count();
-            $offset = ($page-1) * $perPage;
-            $pages  = ceil($total / $perPage);
-            $next   = ($page == $pages) ? NULL : $page+1;
-            $prev   = ($page == 1) ? NULL : $page-1;
-            $from   = $offset+1;
-            $to     = $offset+$perPage < $total ? $offset+$perPage : $total;
+            $request = (new ServerRequestFactory)->createServerRequestFromServer();
+            $params  = $request->getQueryParams();
+            $page    = isset($params['page']) && $params['page'] != 0 && is_numeric($params['page']) ? (int) $params['page'] : 1;
+            $query   = $this->execute();
+            $total   = $query->count();
+            $offset  = ($page-1) * $perPage;
+            $pages   = ceil($total / $perPage);
+            $next    = ($page == $pages) ? NULL : $page+1;
+            $prev    = ($page == 1) ? NULL : $page-1;
+            $from    = $offset+1;
+            $to      = $offset+$perPage < $total ? $offset+$perPage : $total;
 
             $this->limit = $offset.', '.$perPage;
             $query = $this->execute();
