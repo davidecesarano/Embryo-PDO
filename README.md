@@ -372,10 +372,10 @@ The `values` method binds a value to a parameter. Binds a value to a correspondi
 
 ### Pagination
 Pagination means displaying all your fetched results in multiple pages instead of showing them all on one page.
+To change the page number use `page` query param in URI (`http://example.com/?page=1`).
 ```php
-$current_page = 1;
 $perPage = 15;
-$users = $pdo->table("users")->paginate($current_page, $perPage);
+$users = $pdo->table("users")->paginate($perPage);
 ```
 We will have this result:
 ```json
@@ -401,10 +401,9 @@ We will have this result:
 ```
 If you want retrieve specific fields from records you may use:
 ```php
-$current_page = 1;
 $perPage = 15;
 $fields = 'id, first_name, last_name';
-$users = $pdo->table("users")->paginate($current_page, $perPage, $fields);
+$users = $pdo->table("users")->paginate($perPage, $fields);
 ```
 ### Security
 Embryo PDO uses **PDO parameter binding** to protect your application against SQL injection attacks. There is no need to clean strings being passed as bindings.
