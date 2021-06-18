@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": ">=7.1",
-        "davidecesarano/embryo-http": "^1.0"
+        "davidecesarano/embryo-http": "dev-master"
     },
     "autoload": {
         "psr-4": {
