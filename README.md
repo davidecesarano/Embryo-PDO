@@ -100,8 +100,8 @@ echo $user->name;
 If you don't even need an entire row, you may extract one or more values from a record using the `select` method.
 ```php
 $user = $pdo->table('users')
-    ->where('id', 1)
     ->select('name, surname')
+    ->where('id', 1)
     ->get();
 
 echo "Hi, i am $user->name $user->surname";
@@ -385,7 +385,7 @@ We will have this result:
    "current_page": 1,
    "last_page": 4,
    "first_page": 1,
-   "next_page_url": 2,
+   "next_page": 2,
    "prev_page": null,
    "from": 1,
    "to": 15,
@@ -402,8 +402,7 @@ We will have this result:
 If you want retrieve specific fields from records you may use:
 ```php
 $perPage = 15;
-$fields = 'id, first_name, last_name';
-$users = $pdo->table("users")->paginate($perPage, $fields);
+$users = $pdo->table("users")->select('id, first_name, last_name')->paginate($perPage);
 ```
 ### Security
 Embryo PDO uses **PDO parameter binding** to protect your application against SQL injection attacks. There is no need to clean strings being passed as bindings.
@@ -437,9 +436,10 @@ param_type=2
 If you want only to show query, you may print object:
 ```php
 echo $pdo->table('fruit')
+    ->select('name', 'colour', 'calories')
     ->where('calories', '<', 30)
     ->and('colour', 'red')
-    ->select('name', 'colour', 'calories')
+    ->print();
 ```
 This would build the output below:
 ```txt
