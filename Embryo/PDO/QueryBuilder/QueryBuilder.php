@@ -126,6 +126,18 @@
         }
 
         /**
+         * "SELECT" fields.
+         *
+         * @param string[] $field
+         * @return self
+         */
+        public function select(...$field): self
+        {
+            $this->select = (!empty($field)) ? join(', ', $field) : '*';
+            return $this;
+        }
+
+        /**
          * ------------------------------------------------------------
          * STATEMENTS
          * ------------------------------------------------------------
@@ -170,26 +182,13 @@
         }
 
         /**
-         * "SELECT" query.
-         *
-         * @param string[] $field
-         * @return Query
-         */
-        public function select(...$field): Query
-        {
-            $this->select = (!empty($field)) ? join(', ', $field) : '*';
-            $query = $this->execute();
-            return $query;
-        }
-
-        /**
          * SELECT statement shortened.
          * 
          * @return object|array|bool
          */
         public function get()
         {
-            $this->select = '*';
+            $this->select = empty($this->select) ? '*' : $this->select;
             $query = $this->execute();
             return $query->get();
         }
@@ -202,7 +201,7 @@
          */
         public function all()
         {
-            $this->select = '*';
+            $this->select = empty($this->select) ? '*' : $this->select;
             $query = $this->execute();
             return $query->all();
         }
@@ -214,10 +213,10 @@
          * @param string $select 
          * @return object
          */
-        public function paginate(int $perPage = 50, string $select = '*'): object
+        public function paginate(int $perPage = 50): object
         {
-            $this->select = $select;
-
+            $this->select = empty($this->select) ? '*' : $this->select;
+            
             $request = (new ServerRequestFactory)->createServerRequestFromServer();
             $params  = $request->getQueryParams();
             $page    = isset($params['page']) && $params['page'] != 0 && is_numeric($params['page']) ? (int) $params['page'] : 1;
@@ -256,9 +255,21 @@
          */
         public function debug(): string
         {
-            $this->select = '*';
+            $this->select = empty($this->select) ? '*' : $this->select;
             $query = $this->execute();
             return $query->debug();
+        }
+
+        /**
+         * Print query.
+         * 
+         * @return string
+         */
+        public function print(): string
+        {
+            $this->select = empty($this->select) ? '*' : $this->select;
+            $query = $this->execute();
+            return $query->print();
         }
 
         /**
@@ -632,7 +643,7 @@
                 throw new \InvalidArgumentException("First parameter must be a string or callable");
             }
 
-            if (is_callable($field)) {
+            if (is_callable($field) && !is_string($field)) {
 
                 $this->startParentheses = true;  
                 call_user_func($field, $this);
